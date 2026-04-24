@@ -30,7 +30,6 @@ def get_repos(url, limit):
                 payload = json.loads(data)
                 new_repos = payload["items"]
                 length = len(new_repos)
-                print(length)
                 repos_returned += length
                 if repos_returned > limit:
                     remaining_num_repos = limit - len(repos)

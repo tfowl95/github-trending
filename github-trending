@@ -10,7 +10,11 @@ args = cli_arg_parse()
 duration = args.duration
 limit = args.limit
 
-#url = create_url(duration, limit)
-url = "https://api.github.com/search/repositories?q=created%3A%3E2026-04-16&per_page=100&sort=stars&order=desc&page=2"
-repos = get_repos(url, limit)
-print(len(repos))
+url = create_url(duration, limit)
+repos = get_repos(url, limit) # list of dicts
+
+for repo in repos:
+    print(f"{repo['stargazers_count']} stars: {repo['name']}")
+    print(repo['html_url'])
+    print(repo['description'])
+    print("-----------")
