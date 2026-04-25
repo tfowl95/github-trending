@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
-import urllib.request
-import json
+import requests
 
-def create_url(duration, limit):
+def get_url_attributes(duration, limit):
     durations = {
         "day": 1,
         "week": 7,
@@ -13,29 +12,39 @@ def create_url(duration, limit):
     start_date = (today - timedelta(days=durations[duration])).isoformat()
 
     per_page = min(100, limit)
-    return f"https://api.github.com/search/repositories?q=created%3A%3E{start_date}&per_page={per_page}&sort=stars&order=desc"
+    return start_date, per_page
 
-def get_repos(url, limit):
+def get_repos(duration, limit):
+
+    start_date, per_page = get_url_attributes(duration, limit)
+    params = {
+        "q": f"created:>{start_date}",
+        "per_page": per_page,
+        "sort": "stars",
+        "order": "desc"
+    }
+
+    headers = {
+        "Accept": "application/vnd.github+json"
+    }
+
     repos_returned = 0
     repos = []
     while repos_returned < limit:
-        req = urllib.request.Request(url)
-        req.add_header("Accept", "application/vnd.github+json")
         try:
-            with urllib.request.urlopen(req) as response:
-                response_headers = dict(response.headers)
-                links_header = response_headers["Link"]
-                url = get_next_url(links_header)
-                data = response.read()
-                payload = json.loads(data)
-                new_repos = payload["items"]
-                length = len(new_repos)
-                repos_returned += length
-                if repos_returned > limit:
-                    remaining_num_repos = limit - len(repos)
-                    repos.extend(new_repos[0:remaining_num_repos])
-                else:
-                    repos.extend(new_repos)
+            response = requests.get("https://api.github.com/search/repositories", headers = headers, params = params)
+            response_headers = dict(response.headers)
+            links_header = response_headers["Link"]
+            url = get_next_url(links_header)
+            payload = response.json()
+            new_repos = payload["items"]
+            length = len(new_repos)
+            repos_returned += length
+            if repos_returned > limit:
+                remaining_num_repos = limit - len(repos)
+                repos.extend(new_repos[0:remaining_num_repos])
+            else:
+                repos.extend(new_repos)
         except Exception as e:
             print(f"Error: {e}")
     return repos

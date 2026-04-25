@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 from cli import cli_arg_parse
-import urllib.request
-import json
-from utils import create_url, get_repos
+from utils import get_repos
 
 # parse CLI arguments
 args = cli_arg_parse()
 duration = args.duration
 limit = args.limit
 
-url = create_url(duration, limit)
-repos = get_repos(url, limit) # list of dicts
+repos = get_repos(duration, limit) # list of dicts
 
 for repo in repos:
     print(f"{repo['stargazers_count']} stars: {repo['name']}")
